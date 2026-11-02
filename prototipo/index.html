@@ -293,6 +293,43 @@
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
   .heart { color: var(--raspberry); }
+
+  /* Login */
+  .auth-wrap {
+    position: fixed; inset: 0; z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(251, 244, 235, .55);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .auth-wrap.show { display: flex; animation: fade .4s ease; }
+  .auth-card { width: min(400px, 100%); padding: 32px 28px; display: flex; flex-direction: column; gap: 14px; }
+  .auth-card .logo-mark { width: 64px; height: 64px; margin: 0 auto; }
+  .auth-title { font-family: var(--font-display); font-size: 36px; font-weight: 700; text-align: center; line-height: 1; }
+  .auth-sub { font-size: 13px; text-align: center; color: rgba(62,39,35,.7); margin-top: -6px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 500; color: rgba(62,39,35,.8); padding-left: 4px; }
+  .field input {
+    padding: 13px 18px; border-radius: var(--radius-pill);
+    background: rgba(255,255,255,.75); border: 1px solid var(--glass-border);
+    transition: box-shadow .25s ease;
+  }
+  .field input:focus { box-shadow: 0 0 0 3px var(--kobi); }
+  .btn-block { width: 100%; }
+  .link-btn {
+    background: none; border: none; color: var(--raspberry); font: 500 13px 'Poppins', sans-serif;
+    cursor: pointer; text-decoration: underline; text-underline-offset: 3px; align-self: center;
+  }
+  .avatar {
+    width: 84px; height: 84px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sparkling), var(--kobi));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 24px rgba(196,54,112,.2);
+  }
+  .avatar svg { width: 38px; height: 38px; color: var(--raspberry); }
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .profile-grid { grid-template-columns: 1fr; } }
+  .btn-danger { background: rgba(255,255,255,.6); color: var(--raspberry); border: 1px solid var(--petal); }
+  .btn-danger:hover { background: var(--sparkling); }
 </style>
 </head>
 <body>
@@ -311,6 +348,40 @@
 </svg>
 
 <div class="toast" id="toast"></div>
+
+<!-- Login (entrada do usuário único) -->
+<div class="auth-wrap" id="authWrap">
+  <form class="auth-card glass" id="formLogin" novalidate>
+    <svg class="logo-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <g fill="#F7CFE3">
+        <circle cx="50" cy="22" r="18"/><circle cx="78" cy="36" r="18"/><circle cx="78" cy="66" r="18"/>
+        <circle cx="50" cy="80" r="18"/><circle cx="22" cy="66" r="18"/><circle cx="22" cy="36" r="18"/>
+        <circle cx="50" cy="50" r="30"/>
+      </g>
+      <g fill="none" stroke="#8B5E3C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M30 46 Q30 62 50 66 Q70 62 70 46"/>
+        <path d="M50 66 V80"/>
+        <path d="M50 66 Q38 56 36 40 Q48 44 50 58"/>
+        <path d="M50 66 Q62 56 64 40 Q52 44 50 58"/>
+      </g>
+      <path d="M50 34 c-2-3-6-2-6 1 c0 3 6 6 6 6 s6-3 6-6 c0-3-4-4-6-1z" fill="#E75887"/>
+    </svg>
+    <div class="auth-title">Studio <span style="color:var(--raspberry)">Diniz</span></div>
+    <div class="auth-sub">Entre para acessar o sistema</div>
+
+    <div class="field">
+      <label for="loginEmail">E-mail</label>
+      <input type="email" id="loginEmail" autocomplete="username" placeholder="seu@email.com" required>
+    </div>
+    <div class="field">
+      <label for="loginSenha">Senha</label>
+      <input type="password" id="loginSenha" autocomplete="current-password" placeholder="••••••••" required>
+    </div>
+
+    <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+    <button class="link-btn" type="button" id="btnEsqueci">Esqueci minha senha</button>
+  </form>
+</div>
 
 <div class="app">
   <!-- Menu lateral (desktop) -->
@@ -337,6 +408,11 @@
     <button class="nav-btn" data-view="caixa"><svg><use href="#i-cart"/></svg>Caixa</button>
     <button class="nav-btn" data-view="catalogo"><svg><use href="#i-bag"/></svg>Catálogo</button>
     <button class="nav-btn" data-view="pedidos"><svg><use href="#i-list"/></svg>Pedidos</button>
+
+    <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px">
+      <button class="nav-btn" data-view="perfil"><svg><use href="#i-heart"/></svg>Meu perfil</button>
+      <button class="nav-btn" id="btnSair"><svg><use href="#i-flower"/></svg>Sair</button>
+    </div>
   </aside>
 
   <main>
@@ -459,6 +535,52 @@
       </div>
       <div class="list" id="listaPedidos"></div>
     </section>
+
+    <!-- PERFIL DO USUÁRIO -->
+    <section class="view" id="view-perfil">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Meu perfil</div>
+          <div class="page-sub">Dados da conta e segurança</div>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="glass panel" style="display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center">
+          <div class="avatar">
+            <svg viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.4 4.2 4.2 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" fill="currentColor"/></svg>
+          </div>
+          <div style="font-family:var(--font-display); font-size:26px; font-weight:700">Viviene Diniz</div>
+          <div class="product-meta">Studio Diniz · usuário único</div>
+          <div class="product-meta">WhatsApp: +55 31 97198-3044</div>
+        </div>
+
+        <form class="glass panel" id="formSenha" novalidate style="display:flex; flex-direction:column; gap:14px">
+          <h3>Alterar senha</h3>
+          <div class="field">
+            <label for="senhaAtual">Senha atual</label>
+            <input type="password" id="senhaAtual" autocomplete="current-password">
+          </div>
+          <div class="field">
+            <label for="senhaNova">Nova senha</label>
+            <input type="password" id="senhaNova" autocomplete="new-password" placeholder="mínimo de 8 caracteres">
+          </div>
+          <div class="field">
+            <label for="senhaConfirma">Confirmar nova senha</label>
+            <input type="password" id="senhaConfirma" autocomplete="new-password">
+          </div>
+          <button class="btn btn-primary" type="submit">Salvar senha</button>
+        </form>
+      </div>
+
+      <div class="glass panel" style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+        <div>
+          <strong>Sair da conta</strong>
+          <div class="product-meta">Encerra a sessão neste dispositivo</div>
+        </div>
+        <button class="btn btn-danger" id="btnSairPerfil">Sair</button>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -468,6 +590,7 @@
   <button data-view="caixa"><svg><use href="#i-cart"/></svg>Caixa</button>
   <button data-view="catalogo"><svg><use href="#i-bag"/></svg>Catálogo</button>
   <button data-view="pedidos"><svg><use href="#i-list"/></svg>Pedidos</button>
+  <button data-view="perfil"><svg><use href="#i-heart"/></svg>Perfil</button>
 </nav>
 
 <!-- Barra do catálogo: finalizar pelo WhatsApp -->
@@ -688,10 +811,64 @@
     mostrarToast(`Pedido de ${p.cliente}: ${rotulos[p.status]}`);
   });
 
+  // Login (protótipo: a autenticação real será feita com Supabase Auth)
+  const authWrap = document.getElementById('authWrap');
+  const appEl = document.querySelector('.app');
+  const tabbarEl = document.querySelector('.tabbar');
+  const emailValido = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  function mostrarLogin() {
+    authWrap.classList.add('show');
+    appEl.style.display = 'none';
+    tabbarEl.style.display = 'none';
+    document.getElementById('catalogBar').style.display = 'none';
+    document.getElementById('loginSenha').value = '';
+  }
+  function entrarNoSistema() {
+    authWrap.classList.remove('show');
+    appEl.style.display = '';
+    tabbarEl.style.display = '';
+    irPara('painel');
+  }
+
+  document.getElementById('formLogin').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+    if (!emailValido(email)) { mostrarToast('Informe um e-mail válido'); return; }
+    if (!senha) { mostrarToast('Informe sua senha'); return; }
+    entrarNoSistema();
+    mostrarToast('Bem-vinda de volta, Viviene');
+  });
+
+  document.getElementById('btnEsqueci').addEventListener('click', () => {
+    mostrarToast('Enviaremos o link de redefinição para o seu e-mail');
+  });
+
+  function sair() {
+    mostrarLogin();
+    mostrarToast('Sessão encerrada');
+  }
+  document.getElementById('btnSair').addEventListener('click', sair);
+  document.getElementById('btnSairPerfil').addEventListener('click', sair);
+
+  document.getElementById('formSenha').addEventListener('submit', e => {
+    e.preventDefault();
+    const atual = document.getElementById('senhaAtual').value;
+    const nova = document.getElementById('senhaNova').value;
+    const conf = document.getElementById('senhaConfirma').value;
+    if (!atual) { mostrarToast('Informe a senha atual'); return; }
+    if (nova.length < 8) { mostrarToast('A nova senha precisa de pelo menos 8 caracteres'); return; }
+    if (nova !== conf) { mostrarToast('As senhas não conferem'); return; }
+    e.target.reset();
+    mostrarToast('Senha alterada com sucesso');
+  });
+
   renderPdv();
   renderCatalogo();
   renderCarrinho();
   renderPedidos();
+  mostrarLogin();
 </script>
 </body>
 </html>
